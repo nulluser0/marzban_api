@@ -10,9 +10,9 @@ impl MarzbanAPIClient {
     /// Base URL of the Marzban panel.
     pub async fn base_url(&self) -> Result<String, ApiError> {
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, &self.inner.base_url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, self.inner.base_url.clone())
+            })
             .await?;
 
         match response.status() {

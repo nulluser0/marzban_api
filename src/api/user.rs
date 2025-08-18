@@ -44,10 +44,10 @@ impl MarzbanAPIClient {
     pub async fn add_user(&self, new_user: UserCreate) -> Result<UserResponse, ApiError> {
         let url = format!("{}/api/user", self.inner.base_url);
         let response = self
-            .prepare_authorized_request(reqwest::Method::POST, url)
-            .await
-            .json(&new_user)
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::POST, url.clone())
+                    .json(&new_user)
+            })
             .await?;
 
         match response.status() {
@@ -74,9 +74,9 @@ impl MarzbanAPIClient {
     pub async fn get_user(&self, username: impl Into<String>) -> Result<UserResponse, ApiError> {
         let url = format!("{}/api/user/{}", self.inner.base_url, username.into());
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -121,10 +121,10 @@ impl MarzbanAPIClient {
     ) -> Result<UserResponse, ApiError> {
         let url = format!("{}/api/user/{}", self.inner.base_url, username.as_ref());
         let response = self
-            .prepare_authorized_request(reqwest::Method::PUT, url)
-            .await
-            .json(&body)
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::PUT, url.clone())
+                    .json(&body)
+            })
             .await?;
 
         match response.status() {
@@ -152,9 +152,9 @@ impl MarzbanAPIClient {
     pub async fn delete_user(&self, username: impl AsRef<str>) -> Result<String, ApiError> {
         let url = format!("{}/api/user/{}", self.inner.base_url, username.as_ref());
         let response = self
-            .prepare_authorized_request(reqwest::Method::DELETE, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::DELETE, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -186,9 +186,9 @@ impl MarzbanAPIClient {
             username.as_ref()
         );
         let response = self
-            .prepare_authorized_request(reqwest::Method::POST, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::POST, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -226,9 +226,9 @@ impl MarzbanAPIClient {
             username.as_ref()
         );
         let response = self
-            .prepare_authorized_request(reqwest::Method::POST, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::POST, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -259,10 +259,10 @@ impl MarzbanAPIClient {
     ) -> Result<UsersResponse, ApiError> {
         let url = format!("{}/api/users", self.inner.base_url);
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .query(&query_params)
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+                    .query(&query_params)
+            })
             .await?;
 
         match response.status() {
@@ -286,9 +286,9 @@ impl MarzbanAPIClient {
     pub async fn reset_all_users_data_usage(&self) -> Result<String, ApiError> {
         let url = format!("{}/api/users/reset", self.inner.base_url);
         let response = self
-            .prepare_authorized_request(reqwest::Method::POST, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::POST, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -323,10 +323,10 @@ impl MarzbanAPIClient {
         }
 
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .query(&params)
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+                    .query(&params)
+            })
             .await?;
 
         match response.status() {
@@ -386,10 +386,10 @@ impl MarzbanAPIClient {
         }
 
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .query(&params)
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+                    .query(&params)
+            })
             .await?;
 
         match response.status() {
@@ -416,16 +416,17 @@ impl MarzbanAPIClient {
         username: impl AsRef<str>,
         admin_username: impl Into<String>,
     ) -> Result<UserResponse, ApiError> {
+        let admin_username = admin_username.into();
         let url = format!(
             "{}/api/user/{}/set-owner",
             self.inner.base_url,
             username.as_ref()
         );
         let response = self
-            .prepare_authorized_request(reqwest::Method::PUT, url)
-            .await
-            .query(&[("admin_username", admin_username.into())])
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::PUT, url.clone())
+                    .json(&admin_username)
+            })
             .await?;
 
         match response.status() {
@@ -470,10 +471,10 @@ impl MarzbanAPIClient {
         }
 
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .query(&params)
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+                    .query(&params)
+            })
             .await?;
 
         match response.status() {
@@ -513,10 +514,10 @@ impl MarzbanAPIClient {
         }
 
         let response = self
-            .prepare_authorized_request(reqwest::Method::DELETE, url)
-            .await
-            .query(&params)
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::DELETE, url.clone())
+                    .query(&params)
+            })
             .await?;
 
         match response.status() {

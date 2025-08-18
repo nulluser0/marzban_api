@@ -21,9 +21,9 @@ impl MarzbanAPIClient {
     pub async fn get_system_stats(&self) -> Result<SystemStats, ApiError> {
         let url = format!("{}/api/system", self.inner.base_url);
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -47,9 +47,9 @@ impl MarzbanAPIClient {
     pub async fn get_inbounds(&self) -> Result<HashMap<ProxyTypes, Vec<ProxyInbound>>, ApiError> {
         let url = format!("{}/api/inbounds", self.inner.base_url);
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -67,15 +67,15 @@ impl MarzbanAPIClient {
         }
     }
 
-    /// `PUT /api/inbounds`
+    /// `GET /api/inbounds`
     ///
     /// Get a list of proxy hosts grouped by inbound tag.
     pub async fn get_hosts(&self) -> Result<HashMap<ProxyTypes, Vec<ProxyHost>>, ApiError> {
         let url = format!("{}/api/hosts", self.inner.base_url);
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -101,11 +101,12 @@ impl MarzbanAPIClient {
         body: impl Into<HashMap<String, Vec<ProxyHost>>>,
     ) -> Result<HashMap<String, Vec<ProxyHost>>, ApiError> {
         let url = format!("{}/api/hosts", self.inner.base_url);
+        let body = body.into();
         let response = self
-            .prepare_authorized_request(reqwest::Method::PUT, url)
-            .await
-            .json(&body.into())
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::PUT, url.clone())
+                    .json(&body)
+            })
             .await?;
 
         match response.status() {

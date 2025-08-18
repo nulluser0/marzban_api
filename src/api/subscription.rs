@@ -25,9 +25,9 @@ impl MarzbanAPIClient {
     pub async fn user_subscription(&self, user_token: impl AsRef<str>) -> Result<String, ApiError> {
         let url = format!("{}/sub/{}", self.inner.base_url, user_token.as_ref());
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -51,9 +51,9 @@ impl MarzbanAPIClient {
     ) -> Result<UserResponse, ApiError> {
         let url = format!("{}/sub/{}/info", self.inner.base_url, user_token.as_ref());
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -95,10 +95,10 @@ impl MarzbanAPIClient {
         }
 
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .query(&params)
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+                    .query(&params)
+            })
             .await?;
 
         match response.status() {
@@ -131,9 +131,9 @@ impl MarzbanAPIClient {
             client_type
         );
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+            })
             .await?;
 
         match response.status() {

@@ -15,9 +15,9 @@ impl MarzbanAPIClient {
     pub async fn get_core_stats(&self) -> Result<CoreStats, ApiError> {
         let url = format!("{}/api/core", self.inner.base_url);
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -41,9 +41,9 @@ impl MarzbanAPIClient {
     pub async fn restart_core(&self) -> Result<String, ApiError> {
         let url = format!("{}/api/core", self.inner.base_url);
         let response = self
-            .prepare_authorized_request(reqwest::Method::POST, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::POST, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -64,9 +64,9 @@ impl MarzbanAPIClient {
     pub async fn get_core_config(&self) -> Result<String, ApiError> {
         let url = format!("{}/api/core/config", self.inner.base_url);
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -92,11 +92,12 @@ impl MarzbanAPIClient {
         config_as_json: impl AsRef<str>,
     ) -> Result<String, ApiError> {
         let url = format!("{}/api/core/config", self.inner.base_url);
+        let config_as_json = config_as_json.as_ref();
         let response = self
-            .prepare_authorized_request(reqwest::Method::PUT, url)
-            .await
-            .json(config_as_json.as_ref())
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::PUT, url.clone())
+                    .json(config_as_json)
+            })
             .await?;
 
         match response.status() {

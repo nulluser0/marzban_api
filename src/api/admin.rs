@@ -29,8 +29,7 @@ impl MarzbanAPIClient {
     ) -> Result<Token, ApiError> {
         let url = format!("{}/api/admin/token", self.inner.base_url);
         let response = self
-            .prepare_authorized_request(reqwest::Method::POST, url)
-            .await
+            .prepare_request(reqwest::Method::POST, url)
             .form(&auth)
             .send()
             .await?;
@@ -63,9 +62,13 @@ impl MarzbanAPIClient {
         &self,
         auth: BodyAdminTokenApiAdminTokenPost,
     ) -> Result<(), ApiError> {
-        let token = self.admin_token(auth).await?;
+        let token = self.admin_token(auth.clone()).await?;
         let mut token_lock = self.inner.token.write().await;
+        let mut username_lock = self.inner.username.write().await;
+        let mut password_lock = self.inner.password.write().await;
         *token_lock = Some(token.access_token);
+        *username_lock = Some(auth.username);
+        *password_lock = Some(auth.password);
         Ok(())
     }
 
@@ -75,9 +78,9 @@ impl MarzbanAPIClient {
     pub async fn get_current_admin(&self) -> Result<Admin, ApiError> {
         let url = format!("{}/api/admin", self.inner.base_url);
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -101,10 +104,10 @@ impl MarzbanAPIClient {
     pub async fn create_admin(&self, body: AdminCreate) -> Result<Admin, ApiError> {
         let url = format!("{}/api/admin", self.inner.base_url);
         let response = self
-            .prepare_authorized_request(reqwest::Method::POST, url)
-            .await
-            .json(&body)
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::POST, url.clone())
+                    .json(&body)
+            })
             .await?;
 
         match response.status() {
@@ -148,10 +151,10 @@ impl MarzbanAPIClient {
             admin_username.as_ref()
         );
         let response = self
-            .prepare_authorized_request(reqwest::Method::PUT, url)
-            .await
-            .json(&body)
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::PUT, url.clone())
+                    .json(&body)
+            })
             .await?;
 
         match response.status() {
@@ -189,9 +192,9 @@ impl MarzbanAPIClient {
             admin_username.as_ref()
         );
         let response = self
-            .prepare_authorized_request(reqwest::Method::DELETE, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::DELETE, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -247,10 +250,10 @@ impl MarzbanAPIClient {
         }
 
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .query(&params)
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+                    .query(&params)
+            })
             .await?;
 
         match response.status() {

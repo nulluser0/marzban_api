@@ -18,9 +18,9 @@ impl MarzbanAPIClient {
     pub async fn get_node_settings(&self) -> Result<NodeSettings, ApiError> {
         let url = format!("{}/api/node/settings", self.inner.base_url);
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -41,10 +41,10 @@ impl MarzbanAPIClient {
     pub async fn add_node(&self, body: NodeCreate) -> Result<NodeResponse, ApiError> {
         let url = format!("{}/api/node", self.inner.base_url);
         let response = self
-            .prepare_authorized_request(reqwest::Method::POST, url)
-            .await
-            .json(&body)
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::POST, url.clone())
+                    .json(&body)
+            })
             .await?;
 
         match response.status() {
@@ -71,9 +71,9 @@ impl MarzbanAPIClient {
     pub async fn get_node(&self, node_id: i32) -> Result<NodeResponse, ApiError> {
         let url = format!("{}/api/node/{}", self.inner.base_url, node_id);
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -105,10 +105,10 @@ impl MarzbanAPIClient {
     ) -> Result<NodeResponse, ApiError> {
         let url = format!("{}/api/node/{}", self.inner.base_url, node_id);
         let response = self
-            .prepare_authorized_request(reqwest::Method::PUT, url)
-            .await
-            .json(&body)
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::PUT, url.clone())
+                    .json(&body)
+            })
             .await?;
 
         match response.status() {
@@ -136,9 +136,9 @@ impl MarzbanAPIClient {
     pub async fn remove_node(&self, node_id: i32) -> Result<String, ApiError> {
         let url = format!("{}/api/node/{}", self.inner.base_url, node_id);
         let response = self
-            .prepare_authorized_request(reqwest::Method::DELETE, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::DELETE, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -163,9 +163,9 @@ impl MarzbanAPIClient {
     pub async fn get_nodes(&self) -> Result<Vec<NodeResponse>, ApiError> {
         let url = format!("{}/api/nodes", self.inner.base_url);
         let response = self
-            .prepare_authorized_request(reqwest::Method::GET, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -186,9 +186,9 @@ impl MarzbanAPIClient {
     pub async fn reconnect_node(&self, node_id: i32) -> Result<String, ApiError> {
         let url = format!("{}/api/node/{}/reconnect", self.inner.base_url, node_id);
         let response = self
-            .prepare_authorized_request(reqwest::Method::POST, url)
-            .await
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::POST, url.clone())
+            })
             .await?;
 
         match response.status() {
@@ -230,10 +230,10 @@ impl MarzbanAPIClient {
         }
 
         let response = self
-            .prepare_authorized_request(reqwest::Method::DELETE, url)
-            .await
-            .query(&params)
-            .send()
+            .send_with_auth_retry(|| async {
+                self.prepare_request(reqwest::Method::GET, url.clone())
+                    .query(&params)
+            })
             .await?;
 
         match response.status() {

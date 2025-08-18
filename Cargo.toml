@@ -1,6 +1,6 @@
 [package]
 name = "marzban_api"
-version = "0.2.11"
+version = "0.2.12"
 edition = "2021"
 authors = ["nulluser0 (da0da) <diuyueng@gmail.com>"]
 description = "A simple async client which abstracts/simplifies the interactions with the Marzban panel API (https://github.com/Gozargah/Marzban)."
